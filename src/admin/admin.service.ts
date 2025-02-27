@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { InjectModel } from '@nestjs/sequelize';
@@ -11,24 +11,37 @@ export class AdminService {
   constructor(@InjectModel(Admin) private adminModel: typeof Admin) {}
 
   async create(createAdminDto: CreateAdminDto) {
-    const candidate = await this.adminModel.findOne({
-      where: { login: createAdminDto.login },
-    });
+    try {
+      const candidate = await this.adminModel.findOne({
+        where: { login: createAdminDto.login },
+      });
 
-    if (candidate) {
-      throw new BadRequestException('Bunday foydalanuvchi mavjud');
+      if (candidate) {
+        throw new BadRequestException('Bunday foydalanuvchi mavjud');
+      }
+
+      if (createAdminDto.password !== createAdminDto.confirm_password) {
+        throw new BadRequestException('Parrollar mos emas');
+      }
+
+      const hashed_password = await hash(createAdminDto.password, 7);
+      const newAdmin = await this.adminModel.create({
+        ...createAdminDto,
+        hashed_password,
+      });
+      return newAdmin;
+    } catch (error) {
+      console.log(error);
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        throw new BadRequestException({
+          message: 'Phone number already exists.',
+        });
+      } else {
+        throw new InternalServerErrorException({
+          message: 'An internal server error occurred.',
+        });
+      }
     }
-
-    if (createAdminDto.password !== createAdminDto.confirm_password) {
-      throw new BadRequestException('Parrollar mos emas');
-    }
-
-    const hashed_password = await hash(createAdminDto.password, 7);
-    const newAdmin = await this.adminModel.create({
-      ...createAdminDto,
-      hashed_password,
-    });
-    return newAdmin;
   }
 
   findAll() {

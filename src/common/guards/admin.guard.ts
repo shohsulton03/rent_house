@@ -38,7 +38,7 @@ export class AdminGuard implements CanActivate {
         });
       } catch (error) {
         console.log(error)
-        throw new BadRequestException('admin guard error');
+        throw new ForbiddenException('Faqat adminlar korishi mumkun');
       }
 
       if (!payload) {

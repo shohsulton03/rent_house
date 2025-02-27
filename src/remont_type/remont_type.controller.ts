@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { RemontTypeService } from './remont_type.service';
 import { CreateRemontTypeDto } from './dto/create-remont_type.dto';
 import { UpdateRemontTypeDto } from './dto/update-remont_type.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { RemontType } from './models/remont_type.model';
+import { AdminGuard } from '../common/guards/admin.guard';
 
 @ApiTags('Remont Type')
 @Controller('remont-type')
@@ -16,6 +17,7 @@ export class RemontTypeController {
     description: 'Added',
     type: RemontType,
   })
+  @UseGuards(AdminGuard)
   @Post()
   create(@Body() createRemontTypeDto: CreateRemontTypeDto) {
     return this.remontTypeService.create(createRemontTypeDto);
@@ -49,6 +51,7 @@ export class RemontTypeController {
     description: 'Update by Id',
     type: RemontType,
   })
+  @UseGuards(AdminGuard)
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -63,6 +66,7 @@ export class RemontTypeController {
     description: 'Delete by Id',
     type: Number,
   })
+  @UseGuards(AdminGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.remontTypeService.remove(+id);

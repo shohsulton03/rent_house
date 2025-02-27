@@ -6,6 +6,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { House } from './models/house.model';
 import { AddRemoveFurnitureDto } from './dto/addRemoveFurniture.dto';
 import { UserGuard } from '../common/guards/user.guard';
+import { FindHouseDto } from './dto/find-house-dto';
 
 @ApiTags('House')
 @Controller('house')
@@ -33,6 +34,11 @@ export class HouseController {
   @Get()
   findAll() {
     return this.houseService.findAll();
+  }
+
+  @Get('find')
+  async findHouseByParametr(@Body() findHouseDto: FindHouseDto) {
+    return this.houseService.findHouseByParams(findHouseDto)
   }
 
   @ApiOperation({ summary: 'Get one data by Id' })
@@ -76,6 +82,7 @@ export class HouseController {
     description: 'add furniture house',
     type: Object,
   })
+  @UseGuards(UserGuard)
   @HttpCode(HttpStatus.OK)
   @Post('add-furniture')
   async addFurniture(@Body() addRemoveFurnitureDto: AddRemoveFurnitureDto) {
@@ -88,6 +95,7 @@ export class HouseController {
     description: 'remove furniture house',
     type: Object,
   })
+  @UseGuards(UserGuard)
   @HttpCode(HttpStatus.OK)
   @Post('remove-furniture')
   async removeFurniture(@Body() addRemoveFurnitureDto: AddRemoveFurnitureDto) {

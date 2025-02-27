@@ -96,11 +96,8 @@ export class AuthController {
     type: Object,
   })
   @Post('signup-user')
-  async signUpUser(
-    @Body() createUserDto: CreateUserDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    return this.authService.signUpUser(createUserDto, res);
+  async signUpUser(@Body() createUserDto: CreateUserDto) {
+    return this.authService.signUpUser(createUserDto);
   }
 
   @ApiOperation({ summary: 'Verify OTP' })
@@ -111,8 +108,11 @@ export class AuthController {
   })
   @HttpCode(200)
   @Post('verify-otp')
-  async verifyOtp(@Body() verifyOtpDto: VerifyOtpDto) {
-    return this.authService.verifyOtp(verifyOtpDto);
+  async verifyOtp(
+    @Body() verifyOtpDto: VerifyOtpDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.verifyOtp(verifyOtpDto, res);
   }
 
   @ApiOperation({ summary: 'Send again OTP' })

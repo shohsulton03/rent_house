@@ -8,10 +8,14 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from './models/user.model';
 import { hash } from 'bcrypt';
+import { HouseService } from '../house/house.service';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User) private userModel: typeof User) {}
+  constructor(
+    @InjectModel(User) private userModel: typeof User,
+    private readonly houseService: HouseService,
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     try {
@@ -36,7 +40,15 @@ export class UserService {
       return newUser;
     } catch (error) {
       console.log(error);
-      throw new InternalServerErrorException(error);
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        throw new BadRequestException({
+          message: 'Phone number already exists.',
+        });
+      } else {
+        throw new InternalServerErrorException({
+          message: 'An internal server error occurred.',
+        });
+      }
     }
   }
 
@@ -77,7 +89,7 @@ export class UserService {
       { is_active: true },
       { where: { email }, returning: true },
     );
-    return user[1][0]
+    return user[1][0];
   }
 
   async updateRefreshToken(id: number, hashed_refresh_token: string) {
@@ -89,5 +101,13 @@ export class UserService {
 
   remove(id: number) {
     return this.userModel.destroy({ where: { id } });
+  }
+
+  async findOwnerHouses(id: number) {
+    const user = await this.userModel.findByPk(id);
+    if (!user.is_owner) {
+      throw new BadRequestException('You are not owner');
+    }
+    return this.houseService.findHousesByUserId(id)
   }
 }

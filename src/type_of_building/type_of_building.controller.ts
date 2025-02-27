@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { TypeOfBuildingService } from './type_of_building.service';
 import { CreateTypeOfBuildingDto } from './dto/create-type_of_building.dto';
 import { UpdateTypeOfBuildingDto } from './dto/update-type_of_building.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { TypeOfBuilding } from './models/type_of_building.entity';
+import { AdminGuard } from '../common/guards/admin.guard';
 
 @ApiTags('Type Of Building')
 @Controller('type-of-building')
@@ -16,6 +17,7 @@ export class TypeOfBuildingController {
     description: 'Added',
     type: TypeOfBuilding,
   })
+  @UseGuards(AdminGuard)
   @Post()
   create(@Body() createTypeOfBuildingDto: CreateTypeOfBuildingDto) {
     return this.typeOfBuildingService.create(createTypeOfBuildingDto);
@@ -49,6 +51,7 @@ export class TypeOfBuildingController {
     description: 'Update by Id',
     type: TypeOfBuilding,
   })
+  @UseGuards(AdminGuard)
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -63,6 +66,7 @@ export class TypeOfBuildingController {
     description: 'Delete by Id',
     type: Number,
   })
+  @UseGuards(AdminGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.typeOfBuildingService.remove(+id);

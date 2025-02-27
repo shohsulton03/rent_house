@@ -200,19 +200,12 @@ export class AuthService {
     await this.userService.updateRefreshToken(id, hashed_refresh_token);
   }
 
-  async signUpUser(createUserDto: CreateUserDto, res: Response) {
+  async signUpUser(createUserDto: CreateUserDto) {
     const newUser = await this.userService.create(createUserDto);
 
     if (!newUser) {
       throw new InternalServerErrorException("Yangi Admin qo'shishda xatolik");
     }
-
-    const tokens = await this.generateUserTokens(newUser);
-    await this.updateUserRefreshToken(newUser.id, tokens.refresh_token);
-    res.cookie('refresh_token', tokens.refresh_token, {
-      maxAge: +process.env.COOKIE_TIME,
-      httpOnly: true,
-    });
 
     const OTP = generateOTP();
     const now = new Date();
@@ -242,12 +235,11 @@ export class AuthService {
 
     return {
       id: newUser.id,
-      access_token: tokens.access_token,
       details: encodedData,
     };
   }
 
-  async verifyOtp(verifyOtpDto: VerifyOtpDto) {
+  async verifyOtp(verifyOtpDto: VerifyOtpDto, res: Response) {
     const currentDate = new Date();
     const decodedData = await decode(verifyOtpDto.verification_key);
     const details = JSON.parse(decodedData);
@@ -279,17 +271,29 @@ export class AuthService {
       { where: { id: details.otp_id } },
     );
 
-    return { message: 'User activated', is_active: user.is_active };
+    const tokens = await this.generateUserTokens(user);
+    await this.updateUserRefreshToken(user.id, tokens.refresh_token);
+    res.cookie('refresh_token', tokens.refresh_token, {
+      maxAge: +process.env.COOKIE_TIME,
+      httpOnly: true,
+    });
+
+    return {
+      message: 'User activated',
+      id: user.id,
+      access_token: tokens.access_token,
+      is_active: user.is_active,
+    };
   }
 
   async sendOtpAgain(sendOtpAgainDto: SendOtpAgainDto) {
     try {
-      const user = await this.userService.findByEmail(sendOtpAgainDto.email)
+      const user = await this.userService.findByEmail(sendOtpAgainDto.email);
       if (!user) {
-        throw new NotFoundException("User not found")
+        throw new NotFoundException('User not found');
       }
       if (user.is_active) {
-        return {message:"User already activated"}
+        return { message: 'User already activated' };
       }
       const OTP = generateOTP();
       const now = new Date();
@@ -317,10 +321,10 @@ export class AuthService {
         throw new InternalServerErrorException('Xat yuborishda xatolik');
       }
 
-      return { message:"OTP sended your email address", details: encodedData };
+      return { message: 'OTP sended your email address', details: encodedData };
     } catch (error) {
-      console.log(error)
-      throw new InternalServerErrorException("Error in send otp again")
+      console.log(error);
+      throw new InternalServerErrorException('Error in send otp again');
     }
   }
 

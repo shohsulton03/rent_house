@@ -17,6 +17,7 @@ export class HouseTypeController {
     description: 'Added',
     type: HouseType,
   })
+  @UseGuards(AdminGuard)
   @Post()
   create(@Body() createHouseTypeDto: CreateHouseTypeDto) {
     return this.houseTypeService.create(createHouseTypeDto);
@@ -50,6 +51,7 @@ export class HouseTypeController {
     description: 'Update by Id',
     type: HouseType,
   })
+  @UseGuards(AdminGuard)
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -64,6 +66,7 @@ export class HouseTypeController {
     description: 'Delete by Id',
     type: Number,
   })
+  @UseGuards(AdminGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.houseTypeService.remove(+id);

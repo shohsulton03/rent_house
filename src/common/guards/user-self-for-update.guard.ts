@@ -16,6 +16,9 @@ export class UserSelfForUpdateGuard implements CanActivate {
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const req = context.switchToHttp().getRequest();
+    if (!req.user.email){
+      throw new ForbiddenException("Ruxsat etilmagan foydalanuvchi")
+    }
     if (req.user.id != req.params.id) {
       throw new ForbiddenException('Ruxsat etilmagan user');
     }
